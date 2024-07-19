@@ -83,6 +83,8 @@ void func2(int *v, int pos, int n, int *auxVet)
 }
 void func3(int *moedas, int centavo, int n, int pos, int *auxVet, int startIndex)
 {
+    // TODO: Refatorar usando malloc para armazenar um vetor que segure N posições = N em centavos
+
     if (centavo == 0)
     {
         int c1, c5, c10, c25, c50;
