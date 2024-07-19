@@ -7,17 +7,31 @@ typedef struct lista {
     struct lista* prox;
 } lista;
 
-lista* removeNoLista(lista* l) {
-    if (l == NULL) {
-        return NULL;
+lista* removeNoLista(lista* l, int destino) {
+    lista* ant = NULL;
+    lista* p = l;
+
+    while (p != NULL && p->destino != destino) {
+        ant = p;
+        p = p->prox;
     }
-    lista* aux = l->prox;
-    free(l);
-    return aux;
+
+    if (p == NULL) {
+        return l;
+    }
+
+    if (ant == NULL) {
+        l = p->prox;
+    }
+    else {
+        ant->prox = p->prox;
+    }
+    free(p);
+    return l;
 }
 
-lista* removeAresta(lista** g, int origem, int x) {
-    g[origem] = removeNoLista(g[origem]);
+lista* removeAresta(lista** g, int origem, int destino) {
+    g[origem] = removeNoLista(g[origem], destino);
 }
 
 lista* inserirLista(lista* l, int destino, int custo) {
@@ -152,6 +166,61 @@ void caminhos(lista** g, int destino, int* vet, int pos) {
     }
 }
 
+void caminhoCurto(lista** g, int destino, int* vet, int pos, int* menorCaminho, int* menorTamanho) {
+    if (vet[pos - 1] == destino) {
+        if (pos <= *menorTamanho) {
+            *menorTamanho = pos;
+            for (int i = 0; i < pos; i++) {
+                menorCaminho[i] = vet[i];
+            }
+        }
+    }
+    else {
+        lista* l = g[vet[pos - 1]];
+        while (l != NULL) {
+            if (!existe(vet, l->destino, pos)) {
+                vet[pos] = l->destino;
+                caminhoCurto(g, destino, vet, pos + 1, menorCaminho, menorTamanho);
+            }
+            l = l->prox;
+        }
+    }
+}
+
+void caminhoCusto(lista** g, int destino, int* vet, int pos, int* caminho, int* tamanhoCaminho, int* menorCusto, int custo) {
+    if (vet[pos - 1] == destino) {
+        if (custo < *menorCusto) {
+            *tamanhoCaminho = pos; // manter conta do tamanho do vetor para imprimir na main com o este valor
+            *menorCusto = custo;
+            //salva o caminho atual de menor custo
+            for (int i = 0; i < pos; i++) {
+                caminho[i] = vet[i];
+            }
+        }
+    }
+    else {
+        lista* l = g[vet[pos - 1]];
+        while (l != NULL) {
+            if (!existe(vet, l->destino, pos)) {
+                vet[pos] = l->destino;
+                caminhoCusto(g, destino, vet, pos + 1, caminho, tamanhoCaminho, menorCusto, (custo + l->custo));
+            }
+            l = l->prox;
+        }
+    }
+}
+
+void liberaGrafo(lista** g, int N) {
+    for (int i = 0; i < N; i++) {
+        lista* l = g[i];
+        while (l != NULL) {
+            lista* temp = l;
+            l = l->prox;
+            free(temp);
+        }
+    }
+}
+
 void menu1(lista** grafo, int nElemGrafo) {
 
     int entrada = 0;
@@ -163,8 +232,8 @@ void menu1(lista** grafo, int nElemGrafo) {
         printf("4 - Imprimir os graus de entrada e saída de um vértice\n");
         printf("5 - Verificar se um grafo é completo\n");
         printf("6 - Imprimir todos os caminhos entre uma origem e um destino\n");
-        printf("7 - \n");
-        printf("8 - \n");
+        printf("7 - Imprimir o caminho mais curto (menor numero de arestas)\n");
+        printf("8 - Imprimir o caminho de menor custo (menor soma dos custos das arestas)\n");
         printf("9 - sair\n");
         scanf(" %d", &entrada);
 
@@ -228,15 +297,56 @@ void menu1(lista** grafo, int nElemGrafo) {
             caminhos(grafo, inputDestino6, vet, 1);
             printf("\n");
 
+            free(vet);
             break;
         case 7:
+            int inputOrigem7 = 0;
+            int inputDestino7 = 0;
 
+            printf("Digite o valor da origem: ");
+            scanf(" %d", &inputOrigem7);
+            printf("Digite o valor do destino: ");
+            scanf(" %d", &inputDestino7);
+
+            int* vetAux = (int*)malloc(nElemGrafo * sizeof(int));
+            vetAux[0] = inputOrigem7;
+            int menorTamanho = nElemGrafo;
+            int* menorCaminho = (int*)malloc(nElemGrafo * sizeof(int));
+
+            caminhoCurto(grafo, inputDestino7, vetAux, 1, menorCaminho, &menorTamanho);
+            for (int i = 0; i < menorTamanho; i++) {
+                printf("%d ", menorCaminho[i]);
+            }
+
+            printf("\n");
             break;
         case 8:
+            int inputOrigem8 = 0;
+            int inputDestino8 = 0;
 
+            printf("Digite o valor da origem: ");
+            scanf(" %d", &inputOrigem8);
+            printf("Digite o valor do destino: ");
+            scanf(" %d", &inputDestino8);
+            
+            int menorCusto = 1024;
+            int* vetAux2 = (int*)malloc(nElemGrafo * sizeof(int));
+            vetAux2[0] = inputOrigem8;
+            //Tamanho percorrido iniciado com o maior numero possível que se pode percorrer 
+            int tamanhoCaminhoPercorrido = nElemGrafo;
+            int* caminhoPercorrido = (int*)malloc(nElemGrafo * sizeof(int));
+
+            //Custo iniciado com um valor inicial grande para comparação começar
+            caminhoCusto(grafo, inputDestino8, vetAux2, 1, caminhoPercorrido, &tamanhoCaminhoPercorrido, &menorCusto, 0);
+            for (int i = 0; i < tamanhoCaminhoPercorrido; i++) {
+                printf("%d ", caminhoPercorrido[i]);
+            }
+            printf(" custo do caminho: %d", menorCusto);
+            printf("\n");
             break;
         case 9:
             controle = 0;
+            liberaGrafo(grafo, nElemGrafo);
             break;
         default:
             printf("Opcao nao existe");
