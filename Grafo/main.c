@@ -115,7 +115,7 @@ int isGrafoCompleto(lista** g, int N) {
             return 0;
         }
     }
-    if ((grauE < N-1) || (grauS < N-1)) {
+    if ((grauE < N - 1) || (grauS < N - 1)) {
         return 0;
     }
     else {
@@ -124,6 +124,33 @@ int isGrafoCompleto(lista** g, int N) {
     }
 }
 
+int existe(int* vet, int valor, int n) {
+    for (int i = 0; i < n; i++) {
+        if (vet[i] == valor) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void caminhos(lista** g, int destino, int* vet, int pos) {
+    if (vet[pos - 1] == destino) {
+        printf("\n");
+        for (int i = 0; i < pos; i++) {
+            printf("%d ", vet[i]);
+        }
+    }
+    else {
+        lista* l = g[vet[pos - 1]];
+        while (l != NULL) {
+            if (!existe(vet, l->destino, pos)) {
+                vet[pos] = l->destino;
+                caminhos(g, destino, vet, pos + 1);
+            }
+            l = l->prox;
+        }
+    }
+}
 
 void menu1(lista** grafo, int nElemGrafo) {
 
@@ -135,7 +162,7 @@ void menu1(lista** grafo, int nElemGrafo) {
         printf("3 - Imprimir Grafo\n");
         printf("4 - Imprimir os graus de entrada e saída de um vértice\n");
         printf("5 - Verificar se um grafo é completo\n");
-        printf("6 - \n");
+        printf("6 - Imprimir todos os caminhos entre uma origem e um destino\n");
         printf("7 - \n");
         printf("8 - \n");
         printf("9 - sair\n");
@@ -190,6 +217,16 @@ void menu1(lista** grafo, int nElemGrafo) {
             }
             break;
         case 6:
+            int inputOrigem6 = 0;
+            int inputDestino6 = 0;
+            printf("Digite o valor da origem: ");
+            scanf(" %d", &inputOrigem6);
+            printf("Digite o valor do destino: ");
+            scanf(" %d", &inputDestino6);
+            int* vet = (int*)malloc(nElemGrafo * sizeof(int));
+            vet[0] = inputOrigem6;
+            caminhos(grafo, inputDestino6, vet, 1);
+            printf("\n");
 
             break;
         case 7:
